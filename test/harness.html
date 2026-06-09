@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>X New-Posts Badge — test harness</title></head>
+<body>
+<h1>X New-Posts Badge — tests</h1>
+<pre id="out"></pre>
+<script>
+  // Harness must look like the home page to the engine.
+  window.__xnpbTest = true;
+  history.replaceState(null, '', '/home');
+</script>
+<script src="../src/engine.js"></script>
+<script>
+  const out = document.getElementById('out');
+  let pass = 0, fail = 0;
+  function assert(name, cond, detail) {
+    if (cond) { pass++; out.textContent += 'PASS  ' + name + '\n'; }
+    else { fail++; out.textContent += 'FAIL  ' + name + (detail ? '  -> ' + detail : '') + '\n'; }
+  }
+  function eq(name, got, want) { assert(name, got === want, 'got ' + JSON.stringify(got) + ' want ' + JSON.stringify(want)); }
+
+  function resp(entryIds) {
+    return { data: { home: { home_timeline_urt: { instructions: [
+      { type: 'TimelineAddEntries', entries: entryIds.map(id => ({ entryId: id })) }
+    ] } } } };
+  }
+  function makePill(text) {
+    var b = document.createElement('button');
+    b.setAttribute('role', 'button');
+    b.textContent = text;
+    b.className = 'xnpb-mock-pill';
+    document.body.appendChild(b);
+    return b;
+  }
+
+  const X = window.__xnpb;
+
+  // --- countNewEntries ---
+  eq('count: empty (cursors only)', X.countNewEntries(resp(['cursor-top-1','cursor-bottom-2'])), 0);
+  eq('count: tweets', X.countNewEntries(resp(['tweet-1','tweet-2','cursor-top-3','cursor-bottom-4'])), 2);
+  eq('count: tweet + home-conversation', X.countNewEntries(resp(['home-conversation-9','tweet-1','tweet-2','tweet-3','cursor-top-0','cursor-bottom-0'])), 4);
+  eq('count: excludes promoted', X.countNewEntries(resp(['tweet-1','promoted-tweet-2','cursor-top-0'])), 1);
+  eq('count: malformed -> 0', X.countNewEntries({}), 0);
+
+  // --- formatBadge ---
+  eq('badge: 0 -> empty', X.formatBadge(0), '');
+  eq('badge: 1', X.formatBadge(1), '1');
+  eq('badge: 99', X.formatBadge(99), '99');
+  eq('badge: 100 -> 99+', X.formatBadge(100), '99+');
+  eq('badge: negative -> empty', X.formatBadge(-3), '');
+
+  // --- readPill ---
+  (function () {
+    eq('pill: none -> 0', X.readPill(), 0);
+    var p = makePill('Show 13 posts');
+    eq('pill: "Show 13 posts" -> 13', X.readPill(), 13);
+    p.remove();
+    var p2 = makePill('Show 1 post');
+    eq('pill: "Show 1 post" -> 1', X.readPill(), 1);
+    p2.remove();
+    eq('pill: removed -> 0', X.readPill(), 0);
+  })();
+
+  // --- surfaces ---
+  (function () {
+    var badgeCalls = [];
+    navigator.setAppBadge = function (n) { badgeCalls.push(n); return Promise.resolve(); };
+    navigator.clearAppBadge = function () { badgeCalls.push('clear'); return Promise.resolve(); };
+
+    var origTitle = 'Home / X';
+    document.title = origTitle;
+    X.__setBaseTitleForTest(origTitle);
+
+    X.surfaces.applyTitle(5);
+    eq('title: applied', document.title, '(5) ' + origTitle);
+    X.surfaces.clearTitle();
+    eq('title: cleared', document.title, origTitle);
+
+    X.surfaces.applyFavicon(7);
+    var link = document.querySelector('link[rel~="icon"][data-xnpb]');
+    assert('favicon: link created with data uri', !!link && /^data:image\/png/.test(link.href), link && link.href.slice(0, 30));
+    X.surfaces.clearFavicon();
+
+    X.surfaces.applyAppBadge(9);
+    eq('appBadge: setAppBadge(9)', badgeCalls[badgeCalls.length - 1], 9);
+    X.surfaces.applyAppBadge(0);
+    eq('appBadge: 0 -> clear', badgeCalls[badgeCalls.length - 1], 'clear');
+  })();
+
+  // --- setCount + settings gating ---
+  (function () {
+    var badgeCalls = [];
+    navigator.setAppBadge = function (n) { badgeCalls.push(n); return Promise.resolve(); };
+    navigator.clearAppBadge = function () { badgeCalls.push('clear'); return Promise.resolve(); };
+    document.title = 'Home / X';
+    X.__setBaseTitleForTest('Home / X');
+
+    X.applySettings({ title: true, favicon: false, appBadge: true });
+    X.setCount(4);
+    eq('orchestrate: title set', document.title, '(4) Home / X');
+    eq('orchestrate: appBadge set', badgeCalls[badgeCalls.length - 1], 4);
+
+    X.applySettings({ title: false, favicon: false, appBadge: true });
+    eq('orchestrate: title cleared when disabled', document.title, 'Home / X');
+    X.setCount(6);
+    eq('orchestrate: appBadge still set', badgeCalls[badgeCalls.length - 1], 6);
+    eq('orchestrate: title stays off', document.title, 'Home / X');
+
+    X.applySettings({ title: true, favicon: false, appBadge: true });
+    X.setCount(0);
+    eq('orchestrate: title cleared at 0', document.title, 'Home / X');
+    eq('orchestrate: appBadge cleared at 0', badgeCalls[badgeCalls.length - 1], 'clear');
+  })();
+
+  // --- title and favicon are independently gated ---
+  (function () {
+    document.title = 'Home / X'; X.__setBaseTitleForTest('Home / X');
+    X.applySettings({ title: true, favicon: false, appBadge: false });
+    X.setCount(3);
+    eq('split: title on -> title set', document.title, '(3) Home / X');
+    assert('split: favicon off -> no favicon link', !document.querySelector('link[rel~="icon"][data-xnpb]'));
+    X.applySettings({ title: false, favicon: true });
+    X.setCount(4);
+    eq('split: title off -> title cleared', document.title, 'Home / X');
+    assert('split: favicon on -> favicon link present', !!document.querySelector('link[rel~="icon"][data-xnpb]'));
+    X.applySettings({ title: false, favicon: false });
+    X.setCount(0);
+  })();
+
+  // --- accumulation + reconcile ---
+  (function () {
+    X.applySettings({ title: false, favicon: false, appBadge: false }); // isolate counting
+    X.__resetForTest();
+    // a background response we did NOT trigger (e.g. X's initial full timeline load) must be ignored
+    X.__setAwaitingForTest(false);
+    X.__onHltResponseForTest(JSON.stringify(resp(['tweet-a','tweet-b','tweet-c','cursor-top-0'])), /*background=*/true);
+    eq('ignore non-triggered away response', X.__getCountForTest(), 0);
+    // background responses WE triggered accumulate
+    X.__setAwaitingForTest(true);
+    X.__onHltResponseForTest(JSON.stringify(resp(['tweet-1','tweet-2','cursor-top-0','cursor-bottom-0'])), true);
+    eq('accumulate: +2', X.__getCountForTest(), 2);
+    X.__setAwaitingForTest(true);
+    X.__onHltResponseForTest(JSON.stringify(resp(['home-conversation-3','tweet-9','cursor-top-0','cursor-bottom-0'])), true);
+    eq('accumulate: +2 more = 4', X.__getCountForTest(), 4);
+    var p = makePill('Show 11 posts');
+    X.__reconcileToPillForTest();
+    eq('reconcile: count = pill (11)', X.__getCountForTest(), 11);
+    p.remove();
+    X.__reconcileToPillForTest();
+    eq('reconcile: pill gone -> 0', X.__getCountForTest(), 0);
+  })();
+
+  out.textContent = `\n${pass} passed, ${fail} failed\n\n` + out.textContent;
+  document.title = (fail === 0 ? 'ALL PASS' : fail + ' FAIL') + ' — xnpb tests';
+</script>
+</body>
+</html>

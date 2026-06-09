@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>X New-Posts Badge — Settings</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; max-width: 32rem; margin: 2rem auto; padding: 0 1rem; color: #0f1419; }
+    h1 { font-size: 1.25rem; }
+    .row { display: flex; align-items: flex-start; gap: .6rem; padding: .6rem 0; border-bottom: 1px solid #eee; }
+    .row input { margin-top: .25rem; }
+    .row label { cursor: pointer; flex: 1; }
+    .row small { display: block; color: #536471; }
+    .ex { flex: 0 0 auto; width: 210px; max-height: 58px; object-fit: contain;
+          border: 1px solid #e1e8ed; border-radius: 6px; background: #f7f9f9; align-self: center; }
+    footer { margin-top: 1.5rem; color: #536471; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <h1>X New-Posts Badge</h1>
+  <p>Choose where to show the new-posts count. All on by default.</p>
+
+  <div class="row">
+    <input type="checkbox" id="toolbar">
+    <label for="toolbar"><strong>Toolbar badge</strong>
+      <small>Number on the extension's toolbar icon (normal Chrome windows).</small></label>
+    <img class="ex" src="assets/toolbar_badge.png" alt="Toolbar badge example">
+  </div>
+  <div class="row">
+    <input type="checkbox" id="title">
+    <label for="title"><strong>Tab title</strong>
+      <small>Shows "(N)" at the start of the tab title. Works in "Open in app" windows too.</small></label>
+    <img class="ex" src="assets/tab_title.png" alt="Tab title example">
+  </div>
+  <div class="row">
+    <input type="checkbox" id="favicon">
+    <label for="favicon"><strong>Favicon</strong>
+      <small>Draws the number on the tab's favicon (the little site icon in the tab).</small></label>
+    <img class="ex" src="assets/tab_favicon.png" alt="Favicon example">
+  </div>
+  <div class="row">
+    <input type="checkbox" id="appBadge">
+    <label for="appBadge"><strong>App icon badge</strong>
+      <small>Badge on the installed-app dock (macOS) / taskbar (Windows) icon.</small></label>
+    <img class="ex" src="assets/app_icon_badge.png" alt="App icon badge example">
+  </div>
+  <div class="row">
+    <input type="checkbox" id="foreground">
+    <label for="foreground"><strong>Keep refreshing while focused</strong>
+      <small>Off by default — when off, the count still updates the normal way X does (when you
+      scroll, or when you switch back to the tab), so it's never frozen; it just won't keep climbing
+      while you sit on X without scrolling. Turn this on to also keep it climbing while you're
+      actively looking. Trade-off: to force that, the extension keeps X in a "hidden" state, so X's
+      own in-page live updates pause and videos may not autoplay while you're looking.</small></label>
+  </div>
+
+  <footer>Changes save automatically.</footer>
+  <script src="options.js"></script>
+</body>
+</html>
