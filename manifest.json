@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "X New-Posts Badge",
   "version": "1.0.0",
-  "description": "Shows the X (Twitter) home-timeline \"Show N posts\" count on the toolbar, tab/favicon, and installed-app icon — even while you're on another tab.",
+  "description": "Shows your X (Twitter) home-feed new-posts count on the toolbar, tab, favicon and app icon — even while you're on another tab.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
