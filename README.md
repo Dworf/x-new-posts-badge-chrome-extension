@@ -1,5 +1,7 @@
 # X New-Posts Badge — see how many posts are waiting
 
+**[➕ Add to Chrome — Chrome Web Store](https://chromewebstore.google.com/detail/x-new-posts-badge/odhcfgphdadkigoeiojogcifckikahkl)**
+
 A small Chrome extension that shows the X (Twitter) home-timeline **"Show N posts"** count on your
 **toolbar icon**, the **tab title**, the **favicon**, and the **installed-app (dock/taskbar) icon** —
 so you can see how many new posts are waiting **without keeping X focused**.
@@ -34,14 +36,14 @@ The same new-posts count, on every surface — each independently toggleable in 
 
 ## Install
 
-### Load unpacked (from source)
+The easiest way is from the **[Chrome Web Store](https://chromewebstore.google.com/detail/x-new-posts-badge/odhcfgphdadkigoeiojogcifckikahkl)** — click **Add to Chrome** and you're done. Then open [x.com/home](https://x.com/home) and log in.
+
+### Or load unpacked (from source)
 
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select this folder (`x-new-posts-badge-chrome-extension`).
 4. Open [x.com/home](https://x.com/home) and log in. That's it.
-
-_(Chrome Web Store link will be added on first public release.)_
 
 ## What you get
 
