@@ -54,7 +54,9 @@ Four surfaces, each toggleable in the extension's options (all **on** by default
   "Open in app" / installed-app windows.
 - **Favicon** — the number drawn on the tab's favicon (the little site icon in the tab strip).
 - **App icon badge** — the count on the installed-app **dock icon (macOS)** / **taskbar icon
-  (Windows)**, via the browser Badging API. Only visible when X is installed as an app.
+  (Windows)**, via the browser Badging API. Only visible when X is installed as an app. On macOS the
+  X app also needs notification permission — see
+  [Troubleshooting](#the-dock-badge-doesnt-show-on-macos).
 
 The count **mirrors X's own pill exactly** and clears to 0 when X clears it (you click the pill or
 scroll to the newest post). Large counts show as `99+`.
@@ -97,6 +99,43 @@ Details → Extension options. Changes apply immediately and are remembered with
   you sit on X without scrolling. Turn it on to also keep the count climbing while you're actively
   looking. Trade-off — to force that, the extension keeps X in a "hidden" state, so X's own in-page
   live updates pause and videos may not autoplay while you're looking.
+
+## Troubleshooting
+
+### The dock badge doesn't show on macOS
+
+The toolbar badge, tab title and favicon work, but the X app's **dock icon** shows no number.
+
+**Why:** since Chrome 152, Chrome only shows an installed web app's dock badge if **macOS has given
+that app notification permission**. Without it the badge is silently dropped — no error, nothing on
+the dock. On some Macs Chrome hasn't yet switched on the part that lets the app *ask* for that
+permission, so **X never appears in System Settings → Notifications** and there's nothing to allow.
+
+**Check first:** open **System Settings → Notifications**. If **X** is listed, turn on **Allow
+notifications** and **Badge application icon** — that's all you need.
+
+**If X isn't listed — one-time fix:**
+
+1. In a normal Chrome tab on [x.com](https://x.com), click the site-settings icon in the address bar
+   and set **Notifications** to **Allow**.
+2. Quit Chrome completely (**Cmd+Q**), then run this in Terminal:
+   ```sh
+   open -a "Google Chrome" --args --enable-features=AppShimNotificationAttribution
+   ```
+3. Open the **X app** from the dock, press **Cmd+Option+J** to open its console, and run:
+   ```js
+   new Notification('X New-Posts Badge', { body: 'Allow so the dock badge can show.', tag: 'xnpb-' + Date.now() })
+   ```
+4. macOS asks **"X would like to send you notifications"** → click **Allow**. X now appears in System
+   Settings → Notifications.
+5. Quit Chrome and start it normally. The permission is remembered by macOS — the Terminal flag is
+   only needed once.
+
+Don't want X pop-ups? In **System Settings → Notifications → X**, set the alert style to **None** and
+keep **Badge application icon** on — the dock badge keeps working.
+
+If macOS still doesn't ask in step 4, uninstall the X app (**⋮ → Uninstall**, leave "Also clear data"
+**unticked**), reinstall it from x.com, and repeat steps 2–5.
 
 ## Testing
 
